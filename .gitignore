@@ -7,7 +7,7 @@ freetype-*-x86
 jdk1.8.0_*
 openjdk
 android-ndk-r*
-jre.tar.xz
+*.tar.xz
 jreout
 .DS_Store
 .idea
@@ -17,3 +17,8 @@ ios-missing-include/Xm
 dizout
 jreout
 jdkout
+*.deb
+*.log
+debout/
+termux-elf-cleaner/
+pipeline.log

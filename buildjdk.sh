@@ -60,6 +60,23 @@ if [[ "$TARGET_JDK" == "x86" ]]; then
    git apply --reject --whitespace=fix ../patches/jdk8u_android_page_trap_fix.diff || echo "git apply failed (x86 page trap fix)"
 fi
 
+# Additional manual fixes for NDK r10e (GCC 4.9) compatibility on aarch64
+if [[ "$TARGET_JDK" == "aarch64" ]]; then
+  # Skip GCC >= 5 check for Android (NDK r10e uses GCC 4.9)
+  sed -i 's/if test $COMPILER_VERSION_NUMBER_MAJOR -lt 5; then/if false; then/' common/autoconf/toolchain.m4
+  sed -i 's/if test $COMPILER_VERSION_NUMBER_MAJOR -lt 5; then/if false; then/' common/autoconf/generated-configure.sh
+  # Fix C++11 string literal adjacent to macro (GCC 4.9 user-defined literal bug)
+  sed -i 's/CLS"\[B\["OBJ/CLS "[B[" OBJ/' hotspot/src/share/vm/prims/unsafe.cpp
+  sed -i 's/"INT64_FORMAT/" INT64_FORMAT/g' hotspot/src/share/vm/gc_implementation/parallelScavenge/psMarkSweep.cpp
+  sed -i 's/"INT64_FORMAT/" INT64_FORMAT/g' hotspot/src/share/vm/gc_implementation/parallelScavenge/psParallelCompact.cpp
+  sed -i 's/"SIZE_FORMAT/" SIZE_FORMAT/g' hotspot/src/share/vm/gc_implementation/shared/parGCAllocBuffer.cpp
+  sed -i 's/"INT64_FORMAT/" INT64_FORMAT/g' hotspot/src/share/vm/memory/referenceProcessor.cpp
+  sed -i 's/"INT64_FORMAT/" INT64_FORMAT/g' hotspot/src/share/vm/memory/genCollectedHeap.cpp
+  sed -i 's/"PTR_FORMAT/" PTR_FORMAT/g' hotspot/src/cpu/aarch64/vm/vtableStubs_aarch64.cpp
+  sed -i 's/"PRIX64/" PRIX64/g' hotspot/src/cpu/aarch64/vm/macroAssembler_aarch64.cpp
+  sed -i 's/"PRIX32/" PRIX32/g' hotspot/src/cpu/aarch64/vm/macroAssembler_aarch64.cpp
+fi
+
 #   --with-extra-cxxflags="$CXXFLAGS -Dchar16_t=uint16_t -Dchar32_t=uint32_t" \
 #   --with-extra-cflags="$CPPFLAGS" \
 #   --with-sysroot="$(xcrun --sdk iphoneos --show-sdk-path)" \
