@@ -10,8 +10,8 @@ set -e
 out="${1:-debout}"
 mkdir -p "$out"
 
-# Detect arch directory inside jdkout/lib/
-JDK_LIB_ARCH=$(ls jdkout/lib/ | head -1)
+# Detect arch directory inside jdkout/lib/ (e.g., aarch64, i386, amd64, arm)
+JDK_LIB_ARCH=$(ls -d jdkout/lib/*/ 2>/dev/null | head -1 | xargs basename)
 echo "Detected JDK lib arch directory: $JDK_LIB_ARCH"
 
 # Map OpenJDK arch name → Debian architecture name
@@ -81,7 +81,7 @@ findexec "$DEB_DATA_DIR" | xargs -- ./termux-elf-cleaner/build/termux-elf-cleane
 find "$DEB_DATA_DIR" -name "*.diz" -delete 2>/dev/null || true
 
 # Set RUNPATH on ELF binaries and shared libraries
-RUNPATH="${JVM_DIR}/lib/${JDK_LIB_ARCH}:${JVM_DIR}/lib/${JDK_LIB_ARCH}/jli:${JVM_DIR}/jre/lib/${JDK_LIB_ARCH}:${JVM_DIR}/jre/lib/${JDK_LIB_ARCH}/jli:${JVM_DIR}/jre/lib/${JDK_LIB_ARCH}/server:${JVM_DIR}/lib:${JVM_DIR}/jre/lib"
+RUNPATH="${JVM_DIR}/lib/${JDK_LIB_ARCH}:${JVM_DIR}/lib/${JDK_LIB_ARCH}/jli:${JVM_DIR}/jre/lib/${JDK_LIB_ARCH}:${JVM_DIR}/jre/lib/${JDK_LIB_ARCH}/jli:${JVM_DIR}/jre/lib/${JDK_LIB_ARCH}/${JVM_VARIANTS}:${JVM_DIR}/lib:${JVM_DIR}/jre/lib"
 echo "Setting RUNPATH to: $RUNPATH"
 
 # Set RUNPATH on all ELF files (shared libs + executables)
@@ -105,7 +105,9 @@ for dir in "$DEB_DATA_DIR/lib/${JDK_LIB_ARCH}" "$DEB_DATA_DIR/jre/lib/${JDK_LIB_
 done
 
 # Fix libjsig.so symlink (relative)
-(cd "$DEB_DATA_DIR/jre/lib/${JDK_LIB_ARCH}/server" && ln -sf ../libjsig.so libjsig.so 2>/dev/null) || true
+for variant_dir in server client; do
+  (cd "$DEB_DATA_DIR/jre/lib/${JDK_LIB_ARCH}/$variant_dir" && ln -sf ../libjsig.so libjsig.so) 2>/dev/null || true
+done
 
 # Create DEBIAN/control
 cat > "$DEB_CTRL_DIR/control" <<EOF
