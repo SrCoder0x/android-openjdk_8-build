@@ -2,7 +2,7 @@
 set -e
 
 ## Usage:
-## Run after removejdkdebuginfo.sh (jdkout/ must exist)
+## Run after removejdkdebuginfo.sh (jdkout/${TARGET_SHORT}/ must exist)
 ## ./debpack.sh [output_directory]
 
 . setdevkitpath.sh
@@ -10,8 +10,8 @@ set -e
 out="${1:-debout}"
 mkdir -p "$out"
 
-# Detect arch directory inside jdkout/lib/ (e.g., aarch64, i386, amd64, arm)
-JDK_LIB_ARCH=$(ls -d jdkout/lib/*/ 2>/dev/null | head -1 | xargs basename)
+# Detect arch directory inside jdkout/${TARGET_SHORT}/lib/ (e.g., aarch64, i386, amd64, arm)
+JDK_LIB_ARCH=$(ls -d jdkout/${TARGET_SHORT}/lib/*/ 2>/dev/null | head -1 | xargs basename)
 echo "Detected JDK lib arch directory: $JDK_LIB_ARCH"
 
 # Map OpenJDK arch name → Debian architecture name
@@ -27,12 +27,12 @@ JVM_DIR=/data/data/com.termux/files/usr/lib/jvm/java-8-openjdk
 DEB_DATA_DIR=debdata/data/data/com.termux/files/usr/lib/jvm/java-8-openjdk
 DEB_CTRL_DIR=debdata/DEBIAN
 
-# Extract version from jdkout/release
-JAVA_VERSION=$(grep -oP 'JAVA_VERSION="\K[^"]+' jdkout/release 2>/dev/null || echo "1.8.0")
-JAVA_FULL_VERSION=$(grep -oP 'JAVA_FULL_VERSION="\K[^"]+' jdkout/release 2>/dev/null || echo "$JAVA_VERSION")
+# Extract version from jdkout/${TARGET_SHORT}/release
+JAVA_VERSION=$(grep -oP 'JAVA_VERSION="\K[^"]+' jdkout/${TARGET_SHORT}/release 2>/dev/null || echo "1.8.0")
+JAVA_FULL_VERSION=$(grep -oP 'JAVA_FULL_VERSION="\K[^"]+' jdkout/${TARGET_SHORT}/release 2>/dev/null || echo "$JAVA_VERSION")
 VERSION=$(echo "$JAVA_FULL_VERSION" | sed 's/1\.8\.0_\([0-9]*\)/\1/' | sed 's/1\.8\.0/0/')
 DEB_VERSION="8.0.${VERSION:-$(date +%Y%m%d)}"
-INSTALLED_SIZE=$(du -sk jdkout | cut -f1)
+INSTALLED_SIZE=$(du -sk jdkout/${TARGET_SHORT} | cut -f1)
 
 # Build termux-elf-cleaner if not already built
 if [ ! -f termux-elf-cleaner/build/termux-elf-cleaner ]; then
@@ -56,7 +56,7 @@ mkdir -p "$DEB_DATA_DIR"
 mkdir -p "$DEB_CTRL_DIR"
 
 # Copy jdkout content
-cp -a jdkout/* "$DEB_DATA_DIR/"
+cp -a jdkout/${TARGET_SHORT}/* "$DEB_DATA_DIR/"
 
 # Apply jre_override (fonts, etc.)
 if [ -d jre_override ]; then

@@ -7,24 +7,20 @@ fi
 
 imagespath=openjdk/build/${JVM_PLATFORM}-${TARGET_JDK}-normal-${JVM_VARIANTS}-${JDK_DEBUG_LEVEL}/images
 
-rm -rf dizout jreout jdkout
-mkdir dizout
+rm -rf dizout jreout/${TARGET_SHORT} jdkout/${TARGET_SHORT}
+mkdir -p dizout jreout/${TARGET_SHORT} jdkout/${TARGET_SHORT}
 
-cp -r $imagespath/j2re-image jreout
-cp -r $imagespath/j2sdk-image jdkout
+cp -r $imagespath/j2re-image/* jreout/${TARGET_SHORT}/
+cp -r $imagespath/j2sdk-image/* jdkout/${TARGET_SHORT}/
 
 if [[ "$TARGET_JDK" == "x86" ]]; then
   export TARGET_JDK=i386
 fi
 
-mv jdkout/jre/lib/${TARGET_JDK}/libfreetype.so.6 jdkout/lib/${TARGET_JDK}/libfreetype.so || echo "Move exit $?"
-mv jreout/lib/${TARGET_JDK}/libfreetype.so.6 jreout/lib/${TARGET_JDK}/libfreetype.so || echo "Move exit $?"
+mv jdkout/${TARGET_SHORT}/jre/lib/${TARGET_JDK}/libfreetype.so.6 jdkout/${TARGET_SHORT}/lib/${TARGET_JDK}/libfreetype.so || echo "Move exit $?"
+mv jreout/${TARGET_SHORT}/lib/${TARGET_JDK}/libfreetype.so.6 jreout/${TARGET_SHORT}/lib/${TARGET_JDK}/libfreetype.so || echo "Move exit $?"
 
-# mv jreout/lib/${TARGET_JDK}/libfontmanager.diz jreout/lib/${TARGET_JDK}/libfontmanager.diz.keep
-# find jreout -name "*.diz" | xargs -- rm
-# mv jreout/lib/${TARGET_JDK}/libfontmanager.diz.keep jreout/lib/${TARGET_JDK}/libfontmanager.diz
-
-find jreout -name "*.diz" -delete
-find jdkout -name "*.diz" -exec mv {} dizout/ \;
+find jreout/${TARGET_SHORT} -name "*.diz" -delete
+find jdkout/${TARGET_SHORT} -name "*.diz" -exec mv {} dizout/ \;
 
 

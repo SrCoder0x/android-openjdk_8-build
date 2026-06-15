@@ -25,19 +25,17 @@ exit 1
 ' sh {} \; -print
 }
 
-findexec jreout | xargs -- ./termux-elf-cleaner/build/termux-elf-cleaner
-findexec jdkout | xargs -- ./termux-elf-cleaner/build/termux-elf-cleaner
+findexec jreout/${TARGET_SHORT} | xargs -- ./termux-elf-cleaner/build/termux-elf-cleaner
+findexec jdkout/${TARGET_SHORT} | xargs -- ./termux-elf-cleaner/build/termux-elf-cleaner
 
-cp -Rf jre_override/lib/* jreout/lib/
-cp -Rf jre_override/lib/* jdkout/jre/lib/
-
-cd jreout
+cp -Rf jre_override/lib/* jreout/${TARGET_SHORT}/lib/
+cp -Rf jre_override/lib/* jdkout/${TARGET_SHORT}/jre/lib/
 
 # Strip in place all .so files thanks to the ndk
-find ./ -name '*.so' -execdir ${NDK}${NDK_PREBUILT_ARCH} {} \;
+find jreout/${TARGET_SHORT} -name '*.so' -exec ${NDK}${NDK_PREBUILT_ARCH} {} \; 2>/dev/null || true
+find jdkout/${TARGET_SHORT} -name '*.so' -exec ${NDK}${NDK_PREBUILT_ARCH} {} \; 2>/dev/null || true
 
-tar cJf ../jre8-${TARGET_SHORT}-`date +%Y%m%d`-${JDK_DEBUG_LEVEL}.tar.xz .
+tar cJf jre8-${TARGET_SHORT}-`date +%Y%m%d`-${JDK_DEBUG_LEVEL}.tar.xz -C jreout/${TARGET_SHORT} .
 
-cd ../jdkout
-tar cJf ../jdk8-${TARGET_SHORT}-`date +%Y%m%d`-${JDK_DEBUG_LEVEL}.tar.xz .
+tar cJf jdk8-${TARGET_SHORT}-`date +%Y%m%d`-${JDK_DEBUG_LEVEL}.tar.xz -C jdkout/${TARGET_SHORT} .
 
