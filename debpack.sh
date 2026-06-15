@@ -82,22 +82,16 @@ findexec "$DEB_DATA_DIR" | xargs -- ./termux-elf-cleaner/build/termux-elf-cleane
 find "$DEB_DATA_DIR" -name "*.diz" -delete 2>/dev/null || true
 
 # Set RUNPATH on ELF binaries and shared libraries
-RUNPATH="${JVM_DIR}/lib/${JDK_LIB_ARCH}:${JVM_DIR}/lib/${JDK_LIB_ARCH}/jli:${JVM_DIR}/lib/${JDK_LIB_ARCH}/server:${JVM_DIR}/lib"
+RUNPATH="${JVM_DIR}/lib/${JDK_LIB_ARCH}:${JVM_DIR}/lib/${JDK_LIB_ARCH}/jli:${JVM_DIR}/jre/lib/${JDK_LIB_ARCH}:${JVM_DIR}/jre/lib/${JDK_LIB_ARCH}/jli:${JVM_DIR}/jre/lib/${JDK_LIB_ARCH}/server:${JVM_DIR}/lib:${JVM_DIR}/jre/lib"
 echo "Setting RUNPATH to: $RUNPATH"
 
-find "$DEB_DATA_DIR" -type f \( -exec sh -c '
-  case "$(head -n 1 "$1")" in
-    ?ELF*) exit 0;;
-    *) exit 1;;
-  esac
-' sh {} \; -a -name "*.so" -o -exec sh -c '
-  case "$(head -n 1 "$1")" in
-    ?ELF*) exit 0;;
-    *) exit 1;;
-  esac
-' sh {} \; -a ! -name "*.so" \) | while read -r elf; do
-  patchelf --set-rpath "$RUNPATH" "$elf" 2>/dev/null || true
-done
+# Set RUNPATH on all ELF files (shared libs + executables)
+find "$DEB_DATA_DIR" -type f -name "*.so" -exec sh -c '
+  case "$(head -n 1 "$1")" in ?ELF*) exit 0;; *) exit 1;; esac
+' sh {} \; -exec patchelf --set-rpath "$RUNPATH" {} \; 2>/dev/null || true
+find "$DEB_DATA_DIR" -type f ! -name "*.so" -exec sh -c '
+  case "$(head -n 1 "$1")" in ?ELF*) exit 0;; *) exit 1;; esac
+' sh {} \; -exec patchelf --set-rpath "$RUNPATH" {} \; 2>/dev/null || true
 
 # Create librt.so symlinks to Android system libc
 # On 64-bit: /system/lib64/libc.so, on 32-bit: /system/lib/libc.so
