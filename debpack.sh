@@ -236,6 +236,12 @@ chmod 755 "$DEB_CTRL_DIR/prerm"
 # Remove any .gitkeep or empty files that might interfere
 find debdata -name '.git*' -delete 2>/dev/null || true
 
+# Normalize permissions (skip DEBIAN control dir)
+find debdata -type d ! -path 'debdata/DEBIAN/*' -exec chmod 755 {} \;
+# Executables first, then remaining files
+find debdata -type f ! -path 'debdata/DEBIAN/*' -perm /111 -exec chmod 755 {} \;
+find debdata -type f ! -path 'debdata/DEBIAN/*' ! -perm /111 -exec chmod 644 {} \;
+
 # Install md5sums
 cd debdata
 find . -type f ! -path './DEBIAN/*' -exec md5sum {} \; > DEBIAN/md5sums 2>/dev/null || true
@@ -245,7 +251,7 @@ cd ..
 # Build the .deb
 DEB_FILE="${out}/openjdk-8_${DEB_VERSION}_${DEB_ARCH}.deb"
 echo "Building ${DEB_FILE}..."
-dpkg-deb --root-owner-group --build debdata "${DEB_FILE}"
+dpkg-deb --build debdata "${DEB_FILE}"
 
 # Clean up
 rm -rf debdata
