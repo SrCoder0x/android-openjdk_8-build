@@ -38,9 +38,8 @@ INSTALLED_SIZE=$(du -sk jdkout | cut -f1)
 if [ ! -f termux-elf-cleaner/build/termux-elf-cleaner ]; then
   echo "Building termux-elf-cleaner..."
   unset AR AS CC CXX LD OBJCOPY RANLIB STRIP CPPFLAGS LDFLAGS
-  if [ ! -d termux-elf-cleaner ]; then
-    git clone --depth 1 https://github.com/termux/termux-elf-cleaner
-  fi
+  rm -rf termux-elf-cleaner
+  git clone --depth 1 https://github.com/termux/termux-elf-cleaner
   cd termux-elf-cleaner
   mkdir -p build
   cd build

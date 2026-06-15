@@ -2,15 +2,18 @@
 set -e
 
 unset AR AS CC CXX LD OBJCOPY RANLIB STRIP CPPFLAGS LDFLAGS
-git clone --depth 1 https://github.com/termux/termux-elf-cleaner
-cd termux-elf-cleaner
-mkdir build
-cd build
-export CFLAGS=-D__ANDROID_API__=${API}
-cmake ..
-make -j4
-unset CFLAGS
-cd ../..
+if [ ! -f termux-elf-cleaner/build/termux-elf-cleaner ]; then
+  rm -rf termux-elf-cleaner
+  git clone --depth 1 https://github.com/termux/termux-elf-cleaner
+  cd termux-elf-cleaner
+  mkdir -p build
+  cd build
+  export CFLAGS=-D__ANDROID_API__=${API}
+  cmake ..
+  make -j4
+  unset CFLAGS
+  cd ../..
+fi
 
 findexec() { find $1 -type f -name "*" -not -name "*.o" -exec sh -c '
     case "$(head -n 1 "$1")" in
