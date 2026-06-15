@@ -245,7 +245,7 @@ cd ..
 # Build the .deb
 DEB_FILE="${out}/openjdk-8_${DEB_VERSION}_${DEB_ARCH}.deb"
 echo "Building ${DEB_FILE}..."
-dpkg-deb --build debdata "${DEB_FILE}"
+dpkg-deb --root-owner-group --build debdata "${DEB_FILE}"
 
 # Clean up
 rm -rf debdata
