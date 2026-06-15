@@ -79,7 +79,6 @@ fi
 
 #   --with-extra-cxxflags="$CXXFLAGS -Dchar16_t=uint16_t -Dchar32_t=uint32_t" \
 #   --with-extra-cflags="$CPPFLAGS" \
-#   --with-sysroot="$(xcrun --sdk iphoneos --show-sdk-path)" \
 
 # Let's print what's available
 # bash configure --help

@@ -1,19 +1,14 @@
 cups-*-source.tar.gz
+cups-*
 freetype-*.tar.gz
 freetype-*
-cups-*
 dummy_libs
-freetype-*-x86
 jdk1.8.0_*
 openjdk
 android-ndk-r*
 *.tar.xz
-jreout
 .DS_Store
 .idea
-ios-missing-include/cups
-ios-missing-include/X11
-ios-missing-include/Xm
 dizout
 jreout
 jdkout
@@ -21,4 +16,3 @@ jdkout
 *.log
 debout/
 termux-elf-cleaner/
-pipeline.log

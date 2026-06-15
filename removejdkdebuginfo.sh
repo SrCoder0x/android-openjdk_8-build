@@ -18,9 +18,7 @@ if [[ "$TARGET_JDK" == "x86" ]]; then
 fi
 
 mv jdkout/jre/lib/${TARGET_JDK}/libfreetype.so.6 jdkout/lib/${TARGET_JDK}/libfreetype.so || echo "Move exit $?"
-mv jdkout/jre/lib/libfreetype.dylib.6 jdkout/lib/libfreetype.dylib || echo "Move exit $?"
 mv jreout/lib/${TARGET_JDK}/libfreetype.so.6 jreout/lib/${TARGET_JDK}/libfreetype.so || echo "Move exit $?"
-mv jreout/lib/libfreetype.dylib.6 jreout/lib/libfreetype.dylib || echo "Move exit $?"
 
 # mv jreout/lib/${TARGET_JDK}/libfontmanager.diz jreout/lib/${TARGET_JDK}/libfontmanager.diz.keep
 # find jreout -name "*.diz" | xargs -- rm
@@ -29,20 +27,4 @@ mv jreout/lib/libfreetype.dylib.6 jreout/lib/libfreetype.dylib || echo "Move exi
 find jreout -name "*.diz" -delete
 find jdkout -name "*.diz" -exec mv {} dizout/ \;
 
-if [ "$BUILD_IOS" == "1" ]; then
-  install_name_tool -id @rpath/libfreetype.dylib jdkout/jre/lib/libfreetype.dylib
-  install_name_tool -id @rpath/libfreetype.dylib jreout/lib/libfreetype.dylib
-  install_name_tool -change build_android-arm64/lib/libfreetype.dylib @rpath/libfreetype.dylib jdkout/jre/lib/libfontmanager.dylib
-  install_name_tool -change build_android-arm64/lib/libfreetype.dylib @rpath/libfreetype.dylib jreout/lib/libfontmanager.dylib
 
-  JAVA_HOME=/usr/lib/jvm/java-8-openjdk
-  for dafile in $(find j*out -name "*.dylib"); do
-    install_name_tool -add_rpath $JAVA_HOME/lib/server -add_rpath $JAVA_HOME/lib/jli \
-      -add_rpath $JAVA_HOME/lib -add_rpath $JAVA_HOME/jre/lib/server -add_rpath $JAVA_HOME/jre/lib/jli \
-      -add_rpath $JAVA_HOME/jre/lib $dafile
-    ldid -Sios-sign-entitlements.xml $dafile
-  done
-  ldid -Sios-sign-entitlements.xml jreout/bin/*
-  ldid -Sios-sign-entitlements.xml jdkout/bin/*
-  ldid -Sios-sign-entitlements.xml jdkout/jre/bin/*
-fi
