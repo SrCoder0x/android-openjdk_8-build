@@ -2,6 +2,9 @@ name: Build OpenJDK for Android
 
 on:
   workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
 jobs:
   build_android:
     strategy:
@@ -30,12 +33,14 @@ jobs:
     - name: Build with CI build script
       run: bash "ci_build_arch_${{matrix.arch}}.sh"
     - name: Upload JDK build output
+      if: hashFiles('jdk8*.tar.xz') != ''
       uses: actions/upload-artifact@v4.3.1
       with:
         name: "jdk8-${{matrix.arch}}"
         path: jdk8*.tar.xz
 
     - name: Upload JRE build output
+      if: hashFiles('jre8*.tar.xz') != ''
       uses: actions/upload-artifact@v4.3.1
       with:
         name: 'jre8-${{matrix.arch}}'
@@ -51,6 +56,38 @@ jobs:
         name: "openjdk8-deb-${{matrix.arch}}"
         path: debout/*.deb
 
+  release:
+    needs: build_android
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+    - name: Download aarch32 deb
+      uses: actions/download-artifact@v4.1.4
+      with:
+        name: openjdk8-deb-aarch32
+        path: debs/
+    - name: Download aarch64 deb
+      uses: actions/download-artifact@v4.1.4
+      with:
+        name: openjdk8-deb-aarch64
+        path: debs/
+    - name: Download x86 deb
+      uses: actions/download-artifact@v4.1.4
+      with:
+        name: openjdk8-deb-x86
+        path: debs/
+    - name: Download x86_64 deb
+      uses: actions/download-artifact@v4.1.4
+      with:
+        name: openjdk8-deb-x86_64
+        path: debs/
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: debs/*.deb
+        generate_release_notes: true
+        fail_on_unmatched_files: false
+
   pojav:
     needs: build_android
     runs-on: ubuntu-latest
@@ -58,28 +95,34 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4.1.1
     - name: Get jre8-aarch32
+      continue-on-error: true
       uses: actions/download-artifact@v4.1.4
       with:
         name: jre8-aarch32
         path: pojav
     - name: Get jre8-aarch64
+      continue-on-error: true
       uses: actions/download-artifact@v4.1.4
       with:
         name: jre8-aarch64
         path: pojav
     - name: Get jre8-x86
+      continue-on-error: true
       uses: actions/download-artifact@v4.1.4
       with:
         name: jre8-x86
         path: pojav
     - name: Get jre8-x86_64
+      continue-on-error: true
       uses: actions/download-artifact@v4.1.4
       with:
         name: jre8-x86_64
         path: pojav
     - name: Repack JRE
+      if: hashFiles('pojav/jre8-*') != ''
       run: bash "repackjre.sh" $GITHUB_WORKSPACE/pojav $GITHUB_WORKSPACE/pojav/jre8-pojav
     - name: Upload artifact
+      if: hashFiles('pojav/jre8-pojav/*') != ''
       uses: actions/upload-artifact@v4.3.1
       with:
           name: jre8-pojav

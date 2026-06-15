@@ -19,5 +19,5 @@ fi
 ./clonejdk.sh
 ./buildjdk.sh
 ./removejdkdebuginfo.sh
-./tarjdk.sh
+# ./tarjdk.sh  # temporalmente deshabilitado (fix rompe compatibilidad con launchers)
 ./debpack.sh debout
