@@ -109,6 +109,10 @@ for variant_dir in server client; do
   (cd "$DEB_DATA_DIR/jre/lib/${JDK_LIB_ARCH}/$variant_dir" && ln -sf ../libjsig.so libjsig.so) 2>/dev/null || true
 done
 
+# Create profile.d/java.sh
+mkdir -p "$DEB_DATA_DIR/etc/profile.d"
+echo "export JAVA_HOME=${JVM_DIR}/" > "$DEB_DATA_DIR/etc/profile.d/java.sh"
+
 # Create DEBIAN/control
 cat > "$DEB_CTRL_DIR/control" <<EOF
 Package: openjdk-8
@@ -210,7 +214,8 @@ if [ "$1" = 'configure' ] || [ "$1" = 'abort-upgrade' ] || [ "$1" = 'abort-decon
       --slave /data/data/com.termux/files/usr/share/man/man1/unpack200.1 unpack200.1 /data/data/com.termux/files/usr/lib/jvm/java-8-openjdk/man/man1/unpack200.1 \
       --slave /data/data/com.termux/files/usr/share/man/man1/wsgen.1 wsgen.1 /data/data/com.termux/files/usr/lib/jvm/java-8-openjdk/man/man1/wsgen.1 \
       --slave /data/data/com.termux/files/usr/share/man/man1/wsimport.1 wsimport.1 /data/data/com.termux/files/usr/lib/jvm/java-8-openjdk/man/man1/wsimport.1 \
-      --slave /data/data/com.termux/files/usr/share/man/man1/xjc.1 xjc.1 /data/data/com.termux/files/usr/lib/jvm/java-8-openjdk/man/man1/xjc.1
+      --slave /data/data/com.termux/files/usr/share/man/man1/xjc.1 xjc.1 /data/data/com.termux/files/usr/lib/jvm/java-8-openjdk/man/man1/xjc.1 \
+      --slave "$PREFIX/etc/profile.d/java.sh" "java-profile" "/data/data/com.termux/files/usr/lib/jvm/java-8-openjdk/etc/profile.d/java.sh"
   fi
 fi
 POSTINST
@@ -243,12 +248,8 @@ find . -type f ! -path './DEBIAN/*' -exec md5sum {} \; > DEBIAN/md5sums 2>/dev/n
 chmod 644 DEBIAN/md5sums
 cd ..
 
-# Build the .deb
 DEB_FILE="${out}/openjdk-8_${DEB_VERSION}_${DEB_ARCH}.deb"
 echo "Building ${DEB_FILE}..."
 dpkg-deb --build debdata "${DEB_FILE}"
-
-# Clean up
 rm -rf debdata
-
 echo "Done! Package created: ${DEB_FILE}"
