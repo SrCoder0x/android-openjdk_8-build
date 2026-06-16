@@ -59708,19 +59708,31 @@ diff --git a/jdk/src/solaris/bin/java_md_solinux.c b/jdk/src/solaris/bin/java_md
 index a96713757d..d911b54427 100644
 --- a/jdk/src/solaris/bin/java_md_solinux.c
 +++ b/jdk/src/solaris/bin/java_md_solinux.c
-@@ -958,6 +958,57 @@ SetExecname(char **argv)
+@@ -958,6 +958,70 @@
              }
          }
      }
 +#elif defined(__ANDROID__)
 +    char *__java_home = getenv("JAVA_HOME");
-+    // From http://hg.openjdk.java.net/mobile/jdk9/jdk/file/17bb8a98d5e3/src/java.base/unix/native/libjli/java_md_solinux.c#l844
++    char buf[PATH_MAX+1];
++
++    /* Primero intentar /proc/self/exe como en Linux */
++    {
++        const char* self = "/proc/self/exe";
++        int len = readlink(self, buf, PATH_MAX);
++        if (len >= 0) {
++            buf[len] = '\0';            /* readlink(2) doesn't NUL terminate */
++            exec_path = JLI_StringDup(buf);
++        }
++    }
++
++    if (exec_path == NULL) {
++        // From http://hg.openjdk.java.net/mobile/jdk9/jdk/file/17bb8a98d5e3/src/java.base/unix/native/libjli/java_md_solinux.c#l844
 +        /* For Android, 'self' would point to /system/bin/app_process
 +         * since we are really executing a Dalvik program at this point.
 +         * argv[0] points to the Dalvik application name and we set the
 +         * path to __java_home.
 +         */
-+        char buf[PATH_MAX+1];
 +        char *p = NULL;
 +        if ((p = JLI_StrRChr(argv[0], '/')) != 0) {
 +          /* may be running from command line */
@@ -59763,6 +59775,7 @@ index a96713757d..d911b54427 100644
 +            }
 +        }
 +        exec_path = JLI_StringDup(buf);
++    }
  #elif defined(__linux__)
      {
          const char* self = "/proc/self/exe";
