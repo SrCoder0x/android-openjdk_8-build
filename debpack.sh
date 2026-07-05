@@ -118,11 +118,13 @@ cat > "$DEB_CTRL_DIR/control" <<EOF
 Package: openjdk-8
 Architecture: ${DEB_ARCH}
 Installed-Size: ${INSTALLED_SIZE}
-Maintainer: @termux
+Maintainer: @SrCoder0x
 Version: ${DEB_VERSION}
 Homepage: https://openjdk.java.net
-Depends: libandroid-shmem, libandroid-spawn, libiconv, libjpeg-turbo, zlib, littlecms, alsa-plugins, freetype, libpng, fontconfig
-Description: Java development kit and runtime (OpenJDK 8)
+Depends: freetype
+Recommends: fontconfig, ca-certificates-java, resolv-conf
+Suggests: cups
+Description: Java development kit and runtime
 EOF
 
 # Create DEBIAN/postinst with update-alternatives
