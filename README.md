@@ -5,7 +5,7 @@ Based on http://openjdk.java.net/projects/mobile/android.html
 ## Building 
 
 ### Setup
-- Download Android NDK r10e from https://developer.android.com/ndk/downloads/older_releases.html and place it in this directory (Can't automatically download because of EULA)
+- Download Android NDK r10e from https://developer.android.com/ndk/downloads/older_releases.html and place it in this directory (the repo already has the EULA accepted and downloads it automatically anyway)
 - **Warning**: Do not attempt to build use newer or older NDK, it will lead to compilation errors.
 
 ### Platform and architecture specific environment variables
