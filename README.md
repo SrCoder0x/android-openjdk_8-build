@@ -5,7 +5,6 @@ Based on http://openjdk.java.net/projects/mobile/android.html
 ## Building 
 
 ### Setup
-- Download Android NDK r10e from https://developer.android.com/ndk/downloads/older_releases.html and place it in this directory (the repo already has the EULA accepted and downloads it automatically anyway)
 - **Warning**: Do not attempt to build use newer or older NDK, it will lead to compilation errors.
 
 ### Platform and architecture specific environment variables
@@ -47,26 +46,22 @@ Based on http://openjdk.java.net/projects/mobile/android.html
 
 ### Run in this directory:
 ```
-export BUILD_FREETYPE_VERSION=[2.6.2/.../2.10.4] # default: 2.10.4
+export BUILD_FREETYPE_VERSION=[2.6.2/.../2.10.4] # default: 2.13.3
 export JDK_DEBUG_LEVEL=[release/fastdebug/debug] # default: release
 export JVM_VARIANTS=[client/server] # default: client (aarch32), server (other architectures)
 
-# Setup NDK, run once
-./extractndk.sh
-./maketoolchain.sh
+# Setup, choose an architecture to compile and run it just once
 
-# Get CUPS, Freetype and build Freetype
-./getlibs.sh
-./buildlibs.sh
+# armv7 32-bit / aarch32
+./ci_build_arch_aarch32.sh
 
-# Clone JDK, run once
-./clonejdk.sh
+# arm64 / aarch64
+./ci_build_arch_aarch64.sh
 
-# Configure JDK and build, if no configuration is changed, run makejdkwithoutconfigure.sh instead
-./buildjdk.sh
+# x86_64
+./ci_build_arch_x86_64.sh
 
-# Pack the built JDK
-./removejdkdebuginfo.sh
-./tarjdk.sh
+# x86 32-bit
+./ci_build_arch_x86.sh
 ```
 

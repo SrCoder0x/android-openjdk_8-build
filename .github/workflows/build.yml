@@ -30,6 +30,8 @@ jobs:
           libx11-dev libxext-dev libxrender-dev libxrandr-dev libxinerama-dev \
           libxi-dev libxft-dev libxcursor-dev libxfixes-dev libxss-dev \
           libxv-dev libxxf86vm-dev libxtst-dev libxt-dev libice-dev libsm-dev
+    - name: Accept the ndk eula
+      run: echo "eula=true" > eula.txt
     - name: Build with CI build script
       run: bash "ci_build_arch_${{matrix.arch}}.sh"
     - name: Upload JDK build output

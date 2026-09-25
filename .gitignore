@@ -16,3 +16,4 @@ jdkout
 *.log
 debout/
 termux-elf-cleaner/
+eula.txt
