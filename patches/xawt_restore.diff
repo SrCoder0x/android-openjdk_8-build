@@ -1,0 +1,167 @@
+diff --git a/jdk/make/lib/Awt2dLibraries.gmk b/jdk/make/lib/Awt2dLibraries.gmk
+index 0cd6f925..66344c22 100644
+--- a/jdk/make/lib/Awt2dLibraries.gmk
++++ b/jdk/make/lib/Awt2dLibraries.gmk
+@@ -560,8 +560,8 @@ ifeq ($(findstring $(OPENJDK_TARGET_OS),windows macosx),)
+       LIBAWT_XAWT_CFLAGS += -DINTERNAL_BUILD
+     endif
+ 
+-    LIBAWT_XAWT_FILES := list.c
+-    LIBAWT_XAWT_FILES_Z := \
++    # XAWT restoration, all the gtk and gnome source code in openjdk only uses dlopen/dlsym, so we don't need to compile libgtk-dev btw
++    LIBAWT_XAWT_FILES := \
+         XlibWrapper.c \
+         XWindow.c \
+         XToolkit.c \
+@@ -584,20 +584,6 @@ ifeq ($(findstring $(OPENJDK_TARGET_OS),windows macosx),)
+         awt_Event.c \
+         X11Renderer.c \
+         X11PMBlitLoops.c \
+-        OGLBlitLoops.c \
+-        OGLBufImgOps.c \
+-        OGLContext.c \
+-        OGLFuncs.c \
+-        OGLMaskBlit.c \
+-        OGLMaskFill.c \
+-        OGLPaints.c \
+-        OGLRenderQueue.c \
+-        OGLRenderer.c \
+-        OGLSurfaceData.c \
+-        OGLTextRenderer.c \
+-        OGLVertexCache.c \
+-        GLXGraphicsConfig.c \
+-        GLXSurfaceData.c \
+         AccelGlyphCache.c \
+         awt_Font.c \
+         multi_font.c \
+@@ -618,9 +604,11 @@ ifeq ($(findstring $(OPENJDK_TARGET_OS),windows macosx),)
+         rect.c \
+         sun_awt_X11_GtkFileDialogPeer.c \
+         XRSurfaceData.c \
+-        XRBackendNative.c
+-    # -lXext -lX11 -lXrender -lXtst -lXi
+-    LIBAWT_XAWT_LDFLAGS_SUFFIX := $(LIBM) -lawt $(LIBDL) -ljava -ljvm -lc
++        XRBackendNative.c \
++        android_glx_stub.c \
++        android_sysvshm_stub.c
++
++    LIBAWT_XAWT_LDFLAGS_SUFFIX := $(LIBM) -lawt -lXext -lX11 -lXrender $(LIBDL) -lXtst -lXi -ljava -ljvm -lc
+ 
+     ifeq ($(OPENJDK_TARGET_OS), linux)
+       # To match old build, add this to LDFLAGS instead of suffix.
+@@ -954,6 +942,7 @@ BUILD_LIBFONTMANAGER_CFLAGS_COMMON := \
+     $(X_CFLAGS) \
+     -DLE_STANDALONE -DHEADLESS \
+     $(FONT_HEADERS) \
++    -I$(JDK_TOPDIR)/src/share/native/common \
+     -I$(JDK_TOPDIR)/src/share/native/sun/font \
+     -I$(JDK_TOPDIR)/src/share/native/sun/font/layout \
+     -I$(JDK_TOPDIR)/src/share/native/sun/awt/image/cvutils \
+@@ -1122,12 +1111,12 @@ else # OPENJDK_TARGET_OS not windows
+     ifneq ($(OPENJDK_TARGET_OS), solaris)
+       JAWT_LIBS += -lawt
+     endif
+-    # ifndef BUILD_HEADLESS_ONLY
+-      # JAWT_LIBS += -lawt_xawt
+-    # else
++    ifndef BUILD_HEADLESS_ONLY
++      JAWT_LIBS += -lawt_xawt
++    else
+       JAWT_LIBS += -lawt_headless
+       HEADLESS_CFLAG += -DHEADLESS
+-    # endif
++    endif
+   endif
+ 
+   $(eval $(call SetupNativeCompilation,BUILD_LIBJAWT, \
+@@ -1153,11 +1142,11 @@ else # OPENJDK_TARGET_OS not windows
+       OBJECT_DIR := $(JDK_OUTPUTDIR)/objs/libjawt, \
+       DEBUG_SYMBOLS := $(DEBUG_ALL_BINARIES)))
+ 
+-  # ifndef BUILD_HEADLESS_ONLY
+-    # $(BUILD_LIBJAWT): $(BUILD_LIBAWT_XAWT)
+-  # else
++  ifndef BUILD_HEADLESS_ONLY
++    $(BUILD_LIBJAWT): $(BUILD_LIBAWT_XAWT)
++  else
+     $(BUILD_LIBJAWT): $(INSTALL_LIBRARIES_HERE)/$(LIBRARY_PREFIX)awt_headless$(SHARED_LIBRARY_SUFFIX)
+-  # endif
++  endif
+ 
+   ifeq ($(OPENJDK_TARGET_OS), macosx)
+     $(BUILD_LIBJAWT): $(INSTALL_LIBRARIES_HERE)/$(LIBRARY_PREFIX)awt_lwawt$(SHARED_LIBRARY_SUFFIX)
+diff --git a/jdk/src/solaris/native/sun/xawt/XToolkit.c b/jdk/src/solaris/native/sun/xawt/XToolkit.c
+index 24557cba..7ad25dda 100644
+--- a/jdk/src/solaris/native/sun/xawt/XToolkit.c
++++ b/jdk/src/solaris/native/sun/xawt/XToolkit.c
+@@ -27,7 +27,7 @@
+ #include <X11/Xutil.h>
+ #include <X11/Xos.h>
+ #include <X11/Xatom.h>
+-#ifdef __linux__
++#if defined(__linux__) && !defined(__ANDROID__)
+ #include <execinfo.h>
+ #endif
+ 
+@@ -796,7 +796,7 @@ JNIEXPORT jstring JNICALL Java_sun_awt_X11_XToolkit_getEnv
+     return ret;
+ }
+ 
+-#ifdef __linux__
++#if defined(__linux__) && !defined(__ANDROID__)
+ void print_stack(void)
+ {
+   void *array[10];
+diff --git a/jdk/src/solaris/native/sun/xawt/android_glx_stub.c b/jdk/src/solaris/native/sun/xawt/android_glx_stub.c
+new file mode 100644
+index 00000000..f37b995d
+--- /dev/null
++++ b/jdk/src/solaris/native/sun/xawt/android_glx_stub.c
+@@ -0,0 +1,14 @@
++/*
++ * GLX stub, ts just tells the rendering driver that GLX isn't available
++ */
++#include <jni.h>
++#include <X11/Xlib.h>
++#include "GLXGraphicsConfig.h"
++
++jboolean GLXGC_IsGLXAvailable() {
++    return JNI_FALSE;
++}
++
++VisualID GLXGC_FindBestVisual(JNIEnv *env, jint screen) {
++    return (VisualID)0;
++}
+diff --git a/jdk/src/solaris/native/sun/xawt/android_sysvshm_stub.c b/jdk/src/solaris/native/sun/xawt/android_sysvshm_stub.c
+new file mode 100644
+index 00000000..5955b32f
+--- /dev/null
++++ b/jdk/src/solaris/native/sun/xawt/android_sysvshm_stub.c
+@@ -0,0 +1,27 @@
++/*
++ * System V shared memory stub, makes some functions fail so OpenJDK uses its fallback
++ */
++#include <errno.h>
++#include <sys/types.h>
++#include <sys/ipc.h>
++#include <sys/shm.h>
++
++int shmget(key_t key, size_t size, int shmflg) {
++    errno = ENOSYS;
++    return -1;
++}
++
++void *shmat(int shmid, const void *shmaddr, int shmflg) {
++    errno = ENOSYS;
++    return (void *) -1;
++}
++
++int shmdt(const void *shmaddr) {
++    errno = ENOSYS;
++    return -1;
++}
++
++int shmctl(int shmid, int cmd, struct shmid_ds *buf) {
++    errno = ENOSYS;
++    return -1;
++}

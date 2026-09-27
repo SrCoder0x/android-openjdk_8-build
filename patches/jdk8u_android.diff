@@ -60905,3 +60905,33 @@ index 303c96d788..aa555cc286 100644
 +    }
 +
      /**
+diff --git a/jdk/src/solaris/native/java/lang/java_props_md.c b/jdk/src/solaris/native/java/lang/java_props_md.c
+index b03bd6ac..ac92bb88 100644
+--- a/jdk/src/solaris/native/java/lang/java_props_md.c
++++ b/jdk/src/solaris/native/java/lang/java_props_md.c
+@@ -394,7 +394,25 @@ GetJavaProperties(JNIEnv *env)
+     }
+ 
+     /* tmp dir */
++    #if defined(__linux__) && defined(__ANDROID__)
++    {
++        static char android_tmp_dir[PATH_MAX];
++        char *prefix_env;
++
++        v = getenv("TMPDIR");
++        prefix_env = getenv("PREFIX");
++        if (v != NULL) {
++            sprops.tmp_dir = v;
++        } else if (prefix_env != NULL &&
++            snprintf(android_tmp_dir, sizeof(android_tmp_dir), "%s/tmp", prefix_env) < (int) sizeof(android_tmp_dir)) {
++            sprops.tmp_dir = android_tmp_dir;
++            } else {
++                sprops.tmp_dir = "/data/data/com.termux/files/usr/tmp";
++            }
++    }
++    #else
+     sprops.tmp_dir = P_tmpdir;
++    #endif
+ #ifdef MACOSX
+     /* darwin has a per-user temp dir */
+     static char tmp_path[PATH_MAX];

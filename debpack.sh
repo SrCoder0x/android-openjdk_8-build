@@ -23,8 +23,10 @@ case "$JDK_LIB_ARCH" in
   *)       echo "Unknown arch directory: $JDK_LIB_ARCH"; exit 1 ;;
 esac
 
-JVM_DIR=/data/data/com.termux/files/usr/lib/jvm/java-8-openjdk
-DEB_DATA_DIR=debdata/data/data/com.termux/files/usr/lib/jvm/java-8-openjdk
+TERMUX_PKG_ID=com.termux
+TERMUX_LIB_PREFIX=/data/data/$TERMUX_PKG_ID/files/usr/lib
+JVM_DIR=/data/data/$TERMUX_PKG_ID/files/usr/lib/jvm/java-8-openjdk
+DEB_DATA_DIR=debdata/data/data/$TERMUX_PKG_ID/files/usr/lib/jvm/java-8-openjdk
 DEB_CTRL_DIR=debdata/DEBIAN
 
 # Extract version from jdkout/${TARGET_SHORT}/release
@@ -81,7 +83,7 @@ findexec "$DEB_DATA_DIR" | xargs -- ./termux-elf-cleaner/build/termux-elf-cleane
 find "$DEB_DATA_DIR" -name "*.diz" -delete 2>/dev/null || true
 
 # Set RUNPATH on ELF binaries and shared libraries
-RUNPATH="${JVM_DIR}/lib/${JDK_LIB_ARCH}:${JVM_DIR}/lib/${JDK_LIB_ARCH}/jli:${JVM_DIR}/jre/lib/${JDK_LIB_ARCH}:${JVM_DIR}/jre/lib/${JDK_LIB_ARCH}/jli:${JVM_DIR}/jre/lib/${JDK_LIB_ARCH}/${JVM_VARIANTS}:${JVM_DIR}/lib:${JVM_DIR}/jre/lib"
+RUNPATH="${JVM_DIR}/lib/${JDK_LIB_ARCH}:${JVM_DIR}/lib/${JDK_LIB_ARCH}/jli:${JVM_DIR}/jre/lib/${JDK_LIB_ARCH}:${JVM_DIR}/jre/lib/${JDK_LIB_ARCH}/jli:${JVM_DIR}/jre/lib/${JDK_LIB_ARCH}/${JVM_VARIANTS}:${JVM_DIR}/lib:${JVM_DIR}/jre/lib:${TERMUX_LIB_PREFIX}"
 echo "Setting RUNPATH to: $RUNPATH"
 
 # Set RUNPATH on all ELF files (shared libs + executables)
