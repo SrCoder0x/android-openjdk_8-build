@@ -21,13 +21,36 @@ DEST="dummy_libs"
 mkdir -p "$DEST"
 workdir="$(mktemp -d)"
 
-urls=(
-    "https://packages.termux.dev/apt/termux-main/pool/main/libx/libx11/libx11_1.8.13-1_${ARCH}.deb"
-    "https://packages.termux.dev/apt/termux-main/pool/main/libx/libxext/libxext_1.3.7_${ARCH}.deb"
-    "https://packages.termux.dev/apt/termux-main/pool/main/libx/libxrender/libxrender_0.9.12-1_${ARCH}.deb"
-    "https://packages.termux.dev/apt/termux-main/pool/main/libx/libxtst/libxtst_1.2.5-1_${ARCH}.deb"
-    "https://packages.termux.dev/apt/termux-main/pool/main/libx/libxi/libxi_1.8.3_${ARCH}.deb"
+REPO="https://packages.termux.dev/apt/termux-main/pool/main/libx"
+
+packages=(
+    libx11
+    libxext
+    libxrender
+    libxtst
+    libxi
 )
+
+urls=()
+
+for pkg in "${packages[@]}"; do
+    dir="$REPO/$pkg"
+
+    version=$(
+        curl -fsSL "$dir/" |
+        grep -oE "${pkg}_[^\"<>]+_${ARCH}\.deb" |
+        sed -E "s/^${pkg}_//; s/_${ARCH}\.deb$//" |
+        sort -Vu |
+        tail -n1
+    )
+
+    if [[ -z "$version" ]]; then
+        exit 0
+        continue
+    fi
+
+    urls+=("$dir/${pkg}_${version}_${ARCH}.deb")
+done
 
 for url in "${urls[@]}"; do
     deb="$(basename "$url")"
